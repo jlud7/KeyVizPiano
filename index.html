@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zelda Theme - 88-Key Piano Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        #playBtn {
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+            color: white;
+        }
+
+        #playBtn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(58, 123, 213, 0.4);
+        }
+
+        #stopBtn {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            color: white;
+        }
+
+        #stopBtn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .seek-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        #seekSlider {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+        }
+
+        #speedSlider {
+            width: 150px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-track {
+            background: rgba(255, 255, 255, 0.3);
+            height: 6px;
+            border-radius: 3px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #fff;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            margin-top: -6px;
+        }
+
+        input[type="range"]::-moz-range-track {
+            background: rgba(255, 255, 255, 0.3);
+            height: 6px;
+            border-radius: 3px;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            background: #fff;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            border: none;
+        }
+
+        .visualizer {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .note-highway {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .falling-note {
+            position: absolute;
+            border-radius: 3px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .falling-note.white-key {
+            background: linear-gradient(180deg, #4CAF50, #8BC34A);
+            border: 1px solid #2E7D32;
+        }
+
+        .falling-note.black-key {
+            background: linear-gradient(180deg, #FF9800, #FFC107);
+            border: 1px solid #F57C00;
+        }
+
+        .piano-container {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #1a1a1a;
+            padding: 10px 5px 5px 5px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .piano {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            display: flex;
+            user-select: none;
+        }
+
+        .key {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.05s;
+        }
+
+        .white-key {
+            flex: 1;
+            background: linear-gradient(180deg, #ffffff 0%, #f8f8f8 50%, #e8e8e8 100%);
+            border: 1px solid #000;
+            border-radius: 0 0 4px 4px;
+            z-index: 1;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin: 0 1px;
+        }
+
+        .white-key:hover {
+            background: linear-gradient(180deg, #f0f0f0 0%, #e8e8e8 50%, #d8d8d8 100%);
+            box-shadow: 0 3px 4px rgba(0,0,0,0.4);
+        }
+
+        .white-key.active {
+            background: linear-gradient(180deg, #6FCF7F 0%, #4CAF50 50%, #45A049 100%);
+            transform: translateY(3px);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .white-key.middle-c {
+            background: linear-gradient(180deg, #e8f4ff 0%, #d1e9ff 50%, #b8deff 100%);
+        }
+
+        .white-key.middle-c:hover {
+            background: linear-gradient(180deg, #d1e9ff 0%, #b8deff 50%, #9fd4ff 100%);
+        }
+
+        .black-key {
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            background: linear-gradient(180deg, #000000 0%, #1a1a1a 90%, #000000 100%);
+            border: 1px solid #000;
+            border-radius: 0 0 3px 3px;
+            z-index: 2;
+            top: 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+        }
+
+        .black-key:hover {
+            background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 90%, #1a1a1a 100%);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.7);
+        }
+
+        .black-key.active {
+            background: linear-gradient(180deg, #FFA726 0%, #FF9800 50%, #FB8C00 100%);
+            transform: translateY(2px);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .key-label {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            color: #333;
+            pointer-events: none;
+            font-weight: bold;
+            text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+        }
+
+        .black-key .key-label {
+            color: #fff;
+            bottom: 12px;
+            font-size: 9px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .white-key.middle-c .key-label {
+            color: #0066cc;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .octave-label {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            pointer-events: none;
+            font-weight: bold;
+        }
+
+        .info {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .measure-marker {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+
+        .tempo-display {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+        }
+
+        .time-display {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>🎹 The Legend of Zelda - Title Theme</h1>
+    <p class="subtitle">Composed by Koji Kondo | 88-Key Piano Visualizer</p>
+
+    <div class="container">
+        <div class="controls">
+            <button id="playBtn">▶ Play</button>
+            <button id="stopBtn">⏹ Stop</button>
+            <div class="seek-control">
+                <label for="seekSlider">Seek:</label>
+                <input type="range" id="seekSlider" min="0" max="100" value="0" step="0.1">
+                <span id="timeDisplay">0:00 / 0:18</span>
+            </div>
+            <div class="speed-control">
+                <label for="speedSlider">Speed:</label>
+                <input type="range" id="speedSlider" min="0.5" max="2" value="1" step="0.1">
+                <span id="speedValue">1.0x</span>
+            </div>
+            <div class="tempo-display">
+                <span id="tempoDisplay">Tempo: 120 BPM</span>
+            </div>
+        </div>
+
+        <div class="visualizer">
+            <div class="note-highway" id="noteHighway"></div>
+        </div>
+
+        <div class="piano-container" id="pianoContainer">
+            <div class="piano" id="piano"></div>
+        </div>
+
+        <div class="info">
+            <p>🎮 Click Play to start the visualization | Use the seek bar to jump to any part</p>
+            <p>🎹 3-octave piano (C3-C6) optimized for the Zelda theme | Middle C (C4) highlighted in blue</p>
+            <p>🎵 Click on the piano keys to play notes | Touch-screen compatible</p>
+        </div>
+    </div>
+
+    <script>
+        // Web Audio API setup
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Generate full 88-key piano frequencies
+        function generatePianoKeys() {
+            const keys = {};
+            const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            const A4Frequency = 440;
+            const A4KeyNumber = 49; // A4 is the 49th key on an 88-key piano
+
+            for (let keyNumber = 1; keyNumber <= 88; keyNumber++) {
+                const distanceFromA4 = keyNumber - A4KeyNumber;
+                const frequency = A4Frequency * Math.pow(2, distanceFromA4 / 12);
+
+                const octave = Math.floor((keyNumber + 8) / 12);
+                const noteIndex = (keyNumber + 8) % 12;
+                const noteName = noteNames[noteIndex];
+                const fullNoteName = `${noteName}${octave}`;
+
+                keys[fullNoteName] = {
+                    keyNumber: keyNumber,
+                    frequency: frequency,
+                    isBlack: noteName.includes('#'),
+                    noteName: noteName,
+                    octave: octave
+                };
+            }
+
+            return keys;
+        }
+
+        const pianoKeys = generatePianoKeys();
+
+        // Zelda Theme notes with proper octave notation
+        const zeldaTheme = [
+            // Opening phrase
+            { note: 'A4', duration: 1000, time: 0 },
+            { note: 'E4', duration: 500, time: 1000 },
+            { note: 'A4', duration: 500, time: 1500 },
+            { note: 'A4', duration: 250, time: 2000 },
+            { note: 'B4', duration: 250, time: 2250 },
+            { note: 'C5', duration: 250, time: 2500 },
+            { note: 'D5', duration: 250, time: 2750 },
+            { note: 'E5', duration: 1000, time: 3000 },
+
+            // Second phrase
+            { note: 'E5', duration: 250, time: 4000 },
+            { note: 'E5', duration: 250, time: 4250 },
+            { note: 'F5', duration: 250, time: 4500 },
+            { note: 'G5', duration: 250, time: 4750 },
+            { note: 'A5', duration: 1000, time: 5000 },
+
+            // Third phrase
+            { note: 'A5', duration: 250, time: 6000 },
+            { note: 'G5', duration: 250, time: 6250 },
+            { note: 'F5', duration: 250, time: 6500 },
+            { note: 'G5', duration: 250, time: 6750 },
+            { note: 'F5', duration: 250, time: 7000 },
+            { note: 'E5', duration: 250, time: 7250 },
+            { note: 'D5', duration: 250, time: 7500 },
+            { note: 'D5', duration: 250, time: 7750 },
+            { note: 'E5', duration: 250, time: 8000 },
+            { note: 'F5', duration: 250, time: 8250 },
+            { note: 'E5', duration: 500, time: 8500 },
+            { note: 'E5', duration: 500, time: 9000 },
+            { note: 'D5', duration: 500, time: 9500 },
+            { note: 'C5', duration: 500, time: 10000 },
+            { note: 'D5', duration: 500, time: 10500 },
+            { note: 'E5', duration: 1000, time: 11000 },
+
+            // Repeat section
+            { note: 'A4', duration: 1000, time: 12000 },
+            { note: 'E4', duration: 500, time: 13000 },
+            { note: 'A4', duration: 500, time: 13500 },
+            { note: 'A4', duration: 250, time: 14000 },
+            { note: 'B4', duration: 250, time: 14250 },
+            { note: 'C5', duration: 250, time: 14500 },
+            { note: 'D5', duration: 250, time: 14750 },
+            { note: 'E5', duration: 1000, time: 15000 },
+
+            // Final phrase
+            { note: 'E5', duration: 250, time: 16000 },
+            { note: 'E5', duration: 250, time: 16250 },
+            { note: 'F#5', duration: 250, time: 16500 },
+            { note: 'G#5', duration: 250, time: 16750 },
+            { note: 'A5', duration: 1500, time: 17000 },
+        ];
+
+        let isPlaying = false;
+        let playbackSpeed = 1;
+        let playbackTimeouts = [];
+        let noteTimeouts = [];
+        let noteElements = [];
+        let currentTime = 0;
+        let playbackStartTime = 0;
+        let playbackInterval;
+        let totalDuration = Math.max(...zeldaTheme.map(n => n.time + n.duration));
+
+        // Create piano keys
+        function createPiano() {
+            const piano = document.getElementById('piano');
+            const pianoContainer = document.getElementById('pianoContainer');
+
+            // We'll show a subset of keys centered around the playing range
+            // The Zelda theme primarily uses notes from C4 to A5
+            // Let's show 3 octaves: C3 to C6 (37 keys)
+            const startOctave = 3;
+            const endOctave = 6;
+            const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+            // Build the key list for our visible range
+            const visibleKeys = [];
+            for (let octave = startOctave; octave <= endOctave; octave++) {
+                for (let i = 0; i < noteNames.length; i++) {
+                    const fullNoteName = `${noteNames[i]}${octave}`;
+                    if (pianoKeys[fullNoteName]) {
+                        visibleKeys.push({ fullNoteName, ...pianoKeys[fullNoteName] });
+                    }
+                    // Stop at C6
+                    if (octave === endOctave && noteNames[i] === 'C') break;
+                }
+            }
+
+            // Calculate key widths
+            const whiteKeyCount = visibleKeys.filter(k => !k.isBlack).length;
+            const whiteKeyWidth = 100 / whiteKeyCount;
+
+            // Create white keys first
+            let whiteKeyIndex = 0;
+            visibleKeys.forEach(keyData => {
+                if (!keyData.isBlack) {
+                    const key = document.createElement('div');
+                    key.className = 'key white-key';
+
+                    // Highlight middle C
+                    if (keyData.fullNoteName === 'C4') {
+                        key.className += ' middle-c';
+                    }
+
+                    key.dataset.note = keyData.fullNoteName;
+                    key.style.width = `calc(${whiteKeyWidth}% - 2px)`;
+                    key.style.position = 'absolute';
+                    key.style.left = `${whiteKeyIndex * whiteKeyWidth}%`;
+                    key.style.height = '100%';
+
+                    // Add labels for C notes and notes used in the song
+                    const label = document.createElement('span');
+                    label.className = 'key-label';
+
+                    if (keyData.noteName === 'C') {
+                        label.textContent = keyData.fullNoteName;
+                        key.appendChild(label);
+                    } else if (keyData.octave === 4 || keyData.octave === 5) {
+                        // Show note names for the main playing octaves
+                        label.textContent = keyData.noteName;
+                        label.style.fontSize = '9px';
+                        key.appendChild(label);
+                    }
+
+                    key.addEventListener('mousedown', () => playNote(keyData.fullNoteName));
+                    key.addEventListener('mouseup', () => stopNote(keyData.fullNoteName));
+                    key.addEventListener('mouseleave', () => stopNote(keyData.fullNoteName));
+                    key.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        playNote(keyData.fullNoteName);
+                    });
+                    key.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        stopNote(keyData.fullNoteName);
+                    });
+
+                    piano.appendChild(key);
+                    whiteKeyIndex++;
+                }
+            });
+
+            // Create black keys
+            whiteKeyIndex = 0;
+            let lastWasWhite = false;
+
+            visibleKeys.forEach((keyData, index) => {
+                if (!keyData.isBlack) {
+                    lastWasWhite = true;
+                    if (index > 0) whiteKeyIndex++;
+                } else if (lastWasWhite) {
+                    const key = document.createElement('div');
+                    key.className = 'key black-key';
+                    key.dataset.note = keyData.fullNoteName;
+
+                    // Position black key between white keys
+                    const blackKeyWidth = whiteKeyWidth * 0.6;
+                    const leftPosition = (whiteKeyIndex * whiteKeyWidth) - (blackKeyWidth / 2);
+
+                    key.style.width = `calc(${blackKeyWidth}% - 2px)`;
+                    key.style.left = `${leftPosition}%`;
+                    key.style.height = '60%';
+
+                    // Add labels for main octaves
+                    if (keyData.octave === 4 || keyData.octave === 5) {
+                        const label = document.createElement('span');
+                        label.className = 'key-label';
+                        label.textContent = keyData.noteName;
+                        key.appendChild(label);
+                    }
+
+                    key.addEventListener('mousedown', () => playNote(keyData.fullNoteName));
+                    key.addEventListener('mouseup', () => stopNote(keyData.fullNoteName));
+                    key.addEventListener('mouseleave', () => stopNote(keyData.fullNoteName));
+                    key.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        playNote(keyData.fullNoteName);
+                    });
+                    key.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        stopNote(keyData.fullNoteName);
+                    });
+
+                    piano.appendChild(key);
+                    lastWasWhite = false;
+                }
+            });
+
+            // Store visible key range for falling notes
+            window.visibleKeyRange = visibleKeys;
+        }
+
+        // Sound generation
+        const activeOscillators = {};
+
+        function playNote(note) {
+            if (activeOscillators[note] || !pianoKeys[note]) return;
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.frequency.value = pianoKeys[note].frequency;
+            oscillator.type = 'triangle';
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.start();
+            activeOscillators[note] = { oscillator, gainNode };
+
+            // Visual feedback
+            const keyElement = document.querySelector(`[data-note="${note}"]`);
+            if (keyElement) keyElement.classList.add('active');
+        }
+
+        function stopNote(note) {
+            if (activeOscillators[note]) {
+                const { oscillator, gainNode } = activeOscillators[note];
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                setTimeout(() => {
+                    oscillator.stop();
+                    oscillator.disconnect();
+                    gainNode.disconnect();
+                }, 100);
+                delete activeOscillators[note];
+
+                // Remove visual feedback
+                const keyElement = document.querySelector(`[data-note="${note}"]`);
+                if (keyElement) keyElement.classList.remove('active');
+            }
+        }
+
+        // Create falling notes
+        function createFallingNote(noteData, startOffset = 0) {
+            const highway = document.getElementById('noteHighway');
+            const noteElement = document.createElement('div');
+            const keyInfo = pianoKeys[noteData.note];
+
+            if (!keyInfo) return null;
+
+            // Check if note is in visible range
+            const keyElement = document.querySelector(`[data-note="${noteData.note}"]`);
+            if (!keyElement) {
+                // Note is outside visible range, skip it
+                console.log(`Note ${noteData.note} is outside visible range`);
+                return null;
+            }
+
+            noteElement.className = `falling-note ${keyInfo.isBlack ? 'black-key' : 'white-key'}`;
+            noteElement.dataset.note = noteData.note;
+            noteElement.dataset.time = noteData.time;
+
+            // Calculate position based on the actual key element
+            const piano = document.getElementById('piano');
+            const pianoWidth = piano.offsetWidth;
+            const keyLeft = keyElement.offsetLeft;
+            const keyWidth = keyElement.offsetWidth;
+
+            const leftPercent = (keyLeft / pianoWidth) * 100;
+            const widthPercent = (keyWidth / pianoWidth) * 100;
+
+            noteElement.style.left = `${leftPercent}%`;
+            noteElement.style.width = `${widthPercent}%`;
+            noteElement.style.height = `${Math.min(noteData.duration / 8, 120)}px`;
+            noteElement.style.top = '-150px';
+            noteElement.style.borderRadius = '3px';
+
+            highway.appendChild(noteElement);
+
+            // Calculate actual time with offset
+            const actualDelay = Math.max(0, (noteData.time - startOffset) / playbackSpeed);
+
+            // Animate falling
+            const animTimeout = setTimeout(() => {
+                noteElement.style.transition = `transform ${3000 / playbackSpeed}ms linear`;
+                noteElement.style.transform = 'translateY(570px)';
+
+                // Play note when it reaches the piano
+                const playTimeout = setTimeout(() => {
+                    if (isPlaying) {
+                        playNote(noteData.note);
+                        const stopTimeout = setTimeout(() => stopNote(noteData.note), noteData.duration / playbackSpeed);
+                        noteTimeouts.push(stopTimeout);
+                    }
+                }, 3000 / playbackSpeed);
+                noteTimeouts.push(playTimeout);
+
+                // Remove element after animation
+                const removeTimeout = setTimeout(() => {
+                    if (noteElement.parentNode) {
+                        noteElement.remove();
+                    }
+                }, 3500 / playbackSpeed);
+                noteTimeouts.push(removeTimeout);
+            }, actualDelay);
+
+            playbackTimeouts.push(animTimeout);
+            noteElements.push(noteElement);
+
+            return noteElement;
+        }
+
+        // Update time display
+        function updateTimeDisplay() {
+            const seekSlider = document.getElementById('seekSlider');
+            const timeDisplay = document.getElementById('timeDisplay');
+
+            const currentSeconds = Math.floor(currentTime / 1000);
+            const totalSeconds = Math.floor(totalDuration / 1000);
+
+            const currentMin = Math.floor(currentSeconds / 60);
+            const currentSec = currentSeconds % 60;
+            const totalMin = Math.floor(totalSeconds / 60);
+            const totalSec = totalSeconds % 60;
+
+            timeDisplay.textContent = `${currentMin}:${currentSec.toString().padStart(2, '0')} / ${totalMin}:${totalSec.toString().padStart(2, '0')}`;
+            seekSlider.value = (currentTime / totalDuration) * 100;
+        }
+
+        // Playback control
+        function startPlayback(startTime = 0) {
+            if (isPlaying) return;
+            isPlaying = true;
+
+            document.getElementById('playBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+
+            // Clear any existing elements
+            clearPlayback();
+
+            currentTime = startTime;
+            playbackStartTime = Date.now() - (startTime / playbackSpeed);
+
+            // Create notes that should appear from this point
+            const upcomingNotes = zeldaTheme.filter(n => n.time >= startTime - 3000);
+            upcomingNotes.forEach(noteData => {
+                createFallingNote(noteData, startTime);
+            });
+
+            // Update time display
+            playbackInterval = setInterval(() => {
+                if (isPlaying) {
+                    currentTime = (Date.now() - playbackStartTime) * playbackSpeed;
+                    updateTimeDisplay();
+
+                    if (currentTime >= totalDuration) {
+                        stopPlayback();
+                    }
+                }
+            }, 100);
+        }
+
+        function stopPlayback() {
+            isPlaying = false;
+
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+
+            // Clear all timeouts
+            clearPlayback();
+
+            // Stop all active notes
+            Object.keys(activeOscillators).forEach(note => stopNote(note));
+
+            // Clear interval
+            if (playbackInterval) {
+                clearInterval(playbackInterval);
+                playbackInterval = null;
+            }
+
+            // Reset time
+            currentTime = 0;
+            updateTimeDisplay();
+        }
+
+        function clearPlayback() {
+            // Clear all timeouts
+            playbackTimeouts.forEach(timeout => clearTimeout(timeout));
+            noteTimeouts.forEach(timeout => clearTimeout(timeout));
+            playbackTimeouts = [];
+            noteTimeouts = [];
+
+            // Clear falling notes
+            noteElements.forEach(element => {
+                if (element && element.parentNode) {
+                    element.remove();
+                }
+            });
+            noteElements = [];
+            document.getElementById('noteHighway').innerHTML = '';
+        }
+
+        // Seek functionality
+        function seekTo(position) {
+            const wasPlaying = isPlaying;
+
+            if (isPlaying) {
+                stopPlayback();
+            }
+
+            const seekTime = (position / 100) * totalDuration;
+            currentTime = seekTime;
+            updateTimeDisplay();
+
+            if (wasPlaying) {
+                setTimeout(() => startPlayback(seekTime), 100);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('playBtn').addEventListener('click', () => {
+            startPlayback(currentTime);
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', stopPlayback);
+
+        document.getElementById('seekSlider').addEventListener('input', (e) => {
+            if (!isPlaying) {
+                currentTime = (e.target.value / 100) * totalDuration;
+                updateTimeDisplay();
+            }
+        });
+
+        document.getElementById('seekSlider').addEventListener('change', (e) => {
+            seekTo(parseFloat(e.target.value));
+        });
+
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            const wasPlaying = isPlaying;
+            const savedTime = currentTime;
+
+            if (isPlaying) {
+                stopPlayback();
+            }
+
+            playbackSpeed = parseFloat(e.target.value);
+            document.getElementById('speedValue').textContent = `${playbackSpeed}x`;
+            document.getElementById('tempoDisplay').textContent = `Tempo: ${Math.round(120 * playbackSpeed)} BPM`;
+
+            if (wasPlaying) {
+                setTimeout(() => startPlayback(savedTime), 100);
+            }
+        });
+
+        // Initialize
+        createPiano();
+        updateTimeDisplay();
+        document.getElementById('stopBtn').disabled = true;
+
+        // Add measure markers
+        function addMeasureMarkers() {
+            const highway = document.getElementById('noteHighway');
+            for (let i = 0; i < 5; i++) {
+                const marker = document.createElement('div');
+                marker.className = 'measure-marker';
+                marker.style.top = `${i * 100}px`;
+                highway.appendChild(marker);
+            }
+        }
+        addMeasureMarkers();
+    </script>
+</body>
+</html>
