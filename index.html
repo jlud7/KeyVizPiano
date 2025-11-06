@@ -793,24 +793,24 @@
             // Lines (bottom to top): E4(100), G4(80), B4(60), D5(40), F5(20)
             // Spaces: F4(90), A4(70), C5(50), E5(30)
             const trebleNotePositions = {
-                'C4': 140, 'C#4': 140, 'D4': 130, 'D#4': 130,
-                'E4': 120, 'F4': 110, 'F#4': 110, 'G4': 100, 'G#4': 100,
-                'A4': 90, 'A#4': 90, 'B4': 80,
-                'C5': 70, 'C#5': 70, 'D5': 60, 'D#5': 60,
-                'E5': 50, 'F5': 40, 'F#5': 40, 'G5': 30, 'G#5': 30,
-                'A5': 20, 'A#5': 20, 'B5': 10
+                'C4': 110, 'C#4': 110, 'D4': 105, 'D#4': 105,
+                'E4': 100, 'F4': 95, 'F#4': 95, 'G4': 90, 'G#4': 90,
+                'A4': 85, 'A#4': 85, 'B4': 80,
+                'C5': 75, 'C#5': 75, 'D5': 70, 'D#5': 70,
+                'E5': 65, 'F5': 60, 'F#5': 60, 'G5': 55, 'G#5': 55,
+                'A5': 50, 'A#5': 50, 'B5': 45
             };
 
             // Calculate total width needed
-            const noteSpacing = 60;
-            const startX = 80;
-            const totalWidth = Math.max(1200, startX + zeldaTheme.length * noteSpacing);
+            const noteSpacing = 40;
+            const startX = 140;
+            const totalWidth = Math.max(1400, startX + zeldaTheme.length * noteSpacing);
             sheetMusic.style.width = `${totalWidth}px`;
 
-            // Draw notes
+            // Draw notes on treble staff
             zeldaTheme.forEach((noteData, index) => {
                 const noteX = startX + (noteData.time / totalDuration) * (totalWidth - startX - 100);
-                const noteY = notePositions[noteData.note] || 70;
+                const noteY = trebleNotePositions[noteData.note] || 70;
 
                 const noteContainer = document.createElement('div');
                 noteContainer.style.position = 'absolute';
@@ -827,13 +827,8 @@
                     noteHead.appendChild(stem);
                 }
 
-                // Add sharp or flat symbol
-                if (noteData.note.includes('#')) {
-                    const sharp = document.createElement('span');
-                    sharp.className = 'sharp';
-                    sharp.textContent = '♯';
-                    noteHead.appendChild(sharp);
-                }
+                // Don't show sharp symbols (they're in key signature)
+                // Just show the note
 
                 // Add note label below
                 const label = document.createElement('div');
@@ -842,18 +837,20 @@
                 noteHead.appendChild(label);
 
                 noteContainer.appendChild(noteHead);
-                staff.appendChild(noteContainer);
+                staffTreble.appendChild(noteContainer);
 
                 // Store reference for progress tracking
                 noteHead.dataset.time = noteData.time;
             });
 
             // Add measure lines every few beats
+            const grandStaff = document.getElementById('grandStaff');
             for (let i = 0; i < 10; i++) {
                 const measureLine = document.createElement('div');
                 measureLine.className = 'measure-line';
                 measureLine.style.left = `${startX + i * (totalWidth - startX) / 10}px`;
-                staff.appendChild(measureLine);
+                measureLine.style.height = '280px';
+                grandStaff.appendChild(measureLine);
             }
         }
 
@@ -864,7 +861,7 @@
             const sheetWidth = sheetMusic.offsetWidth;
 
             const progress = currentTime / totalDuration;
-            const cursorPosition = 80 + progress * (sheetWidth - 180);
+            const cursorPosition = 140 + progress * (sheetWidth - 240);
             cursor.style.left = `${cursorPosition}px`;
 
             // Auto-scroll the sheet music container
