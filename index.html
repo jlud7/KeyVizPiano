@@ -513,7 +513,7 @@
             <div class="seek-control">
                 <label for="seekSlider">Seek:</label>
                 <input type="range" id="seekSlider" min="0" max="100" value="0" step="0.1">
-                <span id="timeDisplay">0:00 / 0:18</span>
+                <span id="timeDisplay">0:00 / 0:24</span>
             </div>
             <div class="speed-control">
                 <label for="speedSlider">Speed:</label>
@@ -594,138 +594,326 @@
         // Timing: whole=1846ms, half=923ms, quarter=462ms, eighth=231ms, triplet-eighth=154ms
 
         const zeldaTheme = [
-            // === MEASURE 1 === Opening phrase with triplets
+            // Timing reference: 130 BPM, 4/4 time
+            // whole=1846ms, half=923ms, quarter=462ms, eighth=231ms, triplet-eighth=154ms
+
+            // === MEASURE 1 === (0-1846ms) Opening with D half note and triplet pickup
+            // Right hand: Half note D5, rest, then triplet pickup (F#-G-A ascending)
             { note: 'D5', duration: 923, time: 0, hand: 'right' },
-            { note: 'D3', duration: 231, time: 0, hand: 'left' },
-            { note: 'A3', duration: 231, time: 231, hand: 'left' },
-            { note: 'D4', duration: 231, time: 462, hand: 'left' },
-            { note: 'A3', duration: 231, time: 693, hand: 'left' },
+            { note: 'F#4', duration: 154, time: 1385, hand: 'right' },
+            { note: 'G4', duration: 154, time: 1539, hand: 'right' },
+            { note: 'A4', duration: 154, time: 1693, hand: 'right' },
 
-            { note: 'A4', duration: 154, time: 923, hand: 'right' },
-            { note: 'B4', duration: 154, time: 1077, hand: 'right' },
-            { note: 'C#5', duration: 154, time: 1231, hand: 'right' },
-            { note: 'D5', duration: 154, time: 1385, hand: 'right' },
-            { note: 'E5', duration: 154, time: 1539, hand: 'right' },
-            { note: 'F#5', duration: 154, time: 1693, hand: 'right' },
+            // Bass: D major block chords (D3-A3-D4) on each quarter beat
+            { note: 'D3', duration: 462, time: 0, hand: 'left' },
+            { note: 'A3', duration: 462, time: 0, hand: 'left' },
+            { note: 'D4', duration: 462, time: 0, hand: 'left' },
 
-            // === MEASURE 2 ===
-            { note: 'D5', duration: 462, time: 1846, hand: 'right' },
-            { note: 'D3', duration: 231, time: 1846, hand: 'left' },
-            { note: 'A3', duration: 231, time: 2077, hand: 'left' },
-            { note: 'D4', duration: 231, time: 2308, hand: 'left' },
-            { note: 'A3', duration: 231, time: 2539, hand: 'left' },
+            { note: 'D3', duration: 462, time: 462, hand: 'left' },
+            { note: 'A3', duration: 462, time: 462, hand: 'left' },
+            { note: 'D4', duration: 462, time: 462, hand: 'left' },
 
-            { note: 'A4', duration: 154, time: 2308, hand: 'right' },
-            { note: 'B4', duration: 154, time: 2462, hand: 'right' },
-            { note: 'C#5', duration: 154, time: 2616, hand: 'right' },
-            { note: 'D5', duration: 154, time: 2770, hand: 'right' },
-            { note: 'E5', duration: 154, time: 2924, hand: 'right' },
-            { note: 'F#5', duration: 154, time: 3078, hand: 'right' },
+            { note: 'D3', duration: 462, time: 923, hand: 'left' },
+            { note: 'A3', duration: 462, time: 923, hand: 'left' },
+            { note: 'D4', duration: 462, time: 923, hand: 'left' },
 
-            { note: 'D5', duration: 231, time: 3231, hand: 'right' },
-            { note: 'A4', duration: 154, time: 3462, hand: 'right' },
-            { note: 'D3', duration: 231, time: 2770, hand: 'left' },
-            { note: 'A3', duration: 231, time: 3001, hand: 'left' },
-            { note: 'D4', duration: 231, time: 3232, hand: 'left' },
-            { note: 'A3', duration: 231, time: 3463, hand: 'left' },
+            { note: 'D3', duration: 462, time: 1385, hand: 'left' },
+            { note: 'A3', duration: 462, time: 1385, hand: 'left' },
+            { note: 'D4', duration: 462, time: 1385, hand: 'left' },
 
-            // === MEASURE 3 === (3693-5540ms)
-            { note: 'B4', duration: 154, time: 3693, hand: 'right' },
-            { note: 'C#5', duration: 154, time: 3847, hand: 'right' },
-            { note: 'D5', duration: 154, time: 4001, hand: 'right' },
-            { note: 'E5', duration: 154, time: 4155, hand: 'right' },
-            { note: 'F#5', duration: 154, time: 4309, hand: 'right' },
-            { note: 'D5', duration: 231, time: 4463, hand: 'right' },
-            { note: 'A4', duration: 154, time: 4694, hand: 'right' },
-            { note: 'B4', duration: 154, time: 4848, hand: 'right' },
-            { note: 'C#5', duration: 154, time: 5002, hand: 'right' },
-            { note: 'D5', duration: 154, time: 5156, hand: 'right' },
-            { note: 'E5', duration: 154, time: 5310, hand: 'right' },
-            { note: 'F#5', duration: 154, time: 5464, hand: 'right' },
+            // === MEASURE 2 === (1846-3692ms) Ascending run and melodic phrase
+            // Right hand: Triplet run continues, then melodic figures
+            { note: 'B4', duration: 154, time: 1846, hand: 'right' },
+            { note: 'C#5', duration: 154, time: 2000, hand: 'right' },
+            { note: 'D5', duration: 154, time: 2154, hand: 'right' },
+            { note: 'E5', duration: 231, time: 2308, hand: 'right' },
+            { note: 'D5', duration: 231, time: 2539, hand: 'right' },
+            { note: 'C#5', duration: 231, time: 2770, hand: 'right' },
+            { note: 'B4', duration: 231, time: 3001, hand: 'right' },
+            { note: 'A4', duration: 231, time: 3231, hand: 'right' },
+            { note: 'G4', duration: 231, time: 3462, hand: 'right' },
 
-            // === MEASURE 4 === (5540-7386ms)
-            { note: 'D5', duration: 231, time: 5540, hand: 'right' },
-            { note: 'D5', duration: 231, time: 5771, hand: 'right' },
-            { note: 'D5', duration: 231, time: 6002, hand: 'right' },
-            { note: 'D5', duration: 231, time: 6233, hand: 'right' },
-            { note: 'D5', duration: 231, time: 6463, hand: 'right' },
-            { note: 'D5', duration: 231, time: 6694, hand: 'right' },
-            { note: 'D5', duration: 231, time: 6925, hand: 'right' },
-            { note: 'D5', duration: 231, time: 7156, hand: 'right' },
+            // Bass: Continue D major block chords
+            { note: 'D3', duration: 462, time: 1846, hand: 'left' },
+            { note: 'A3', duration: 462, time: 1846, hand: 'left' },
+            { note: 'D4', duration: 462, time: 1846, hand: 'left' },
 
-            // === MEASURE 5 === (7386-9232ms) - After repeat, melodic section
-            { note: 'D5', duration: 462, time: 7386, hand: 'right' },
-            { note: 'E5', duration: 231, time: 7848, hand: 'right' },
-            { note: 'D5', duration: 693, time: 8079, hand: 'right' },
-            { note: 'A4', duration: 231, time: 8772, hand: 'right' },
-            { note: 'D5', duration: 231, time: 9003, hand: 'right' },
+            { note: 'D3', duration: 462, time: 2308, hand: 'left' },
+            { note: 'A3', duration: 462, time: 2308, hand: 'left' },
+            { note: 'D4', duration: 462, time: 2308, hand: 'left' },
 
-            // === MEASURE 6 === (9232-11078ms)
-            { note: 'D5', duration: 923, time: 9232, hand: 'right' },
-            { note: 'A4', duration: 154, time: 10155, hand: 'right' },
-            { note: 'B4', duration: 154, time: 10309, hand: 'right' },
-            { note: 'C#5', duration: 154, time: 10463, hand: 'right' },
-            { note: 'D5', duration: 154, time: 10617, hand: 'right' },
-            { note: 'E5', duration: 154, time: 10771, hand: 'right' },
-            { note: 'F#5', duration: 154, time: 10925, hand: 'right' },
+            { note: 'D3', duration: 462, time: 2770, hand: 'left' },
+            { note: 'A3', duration: 462, time: 2770, hand: 'left' },
+            { note: 'D4', duration: 462, time: 2770, hand: 'left' },
 
-            // === MEASURE 7 === (11078-12925ms)
-            { note: 'D5', duration: 231, time: 11078, hand: 'right' },
-            { note: 'E5', duration: 231, time: 11309, hand: 'right' },
-            { note: 'D5', duration: 462, time: 11540, hand: 'right' },
-            { note: 'D5', duration: 231, time: 12002, hand: 'right' },
-            { note: 'E5', duration: 231, time: 12233, hand: 'right' },
-            { note: 'D5', duration: 231, time: 12463, hand: 'right' },
-            { note: 'D5', duration: 231, time: 12694, hand: 'right' },
+            { note: 'D3', duration: 462, time: 3231, hand: 'left' },
+            { note: 'A3', duration: 462, time: 3231, hand: 'left' },
+            { note: 'D4', duration: 462, time: 3231, hand: 'left' },
 
-            // === MEASURE 8 === (12925-14771ms)
-            { note: 'D5', duration: 231, time: 12925, hand: 'right' },
-            { note: 'D5', duration: 231, time: 13156, hand: 'right' },
-            { note: 'E5', duration: 231, time: 13386, hand: 'right' },
-            { note: 'D5', duration: 231, time: 13617, hand: 'right' },
-            { note: 'D5', duration: 231, time: 13848, hand: 'right' },
-            { note: 'D5', duration: 231, time: 14079, hand: 'right' },
-            { note: 'D#5', duration: 231, time: 14309, hand: 'right' },
-            { note: 'E5', duration: 231, time: 14540, hand: 'right' },
+            // === MEASURE 3 === (3692-5538ms) Triplet run and melodic continuation
+            { note: 'F#4', duration: 154, time: 3692, hand: 'right' },
+            { note: 'G4', duration: 154, time: 3846, hand: 'right' },
+            { note: 'A4', duration: 154, time: 4000, hand: 'right' },
+            { note: 'B4', duration: 154, time: 4154, hand: 'right' },
+            { note: 'C#5', duration: 154, time: 4308, hand: 'right' },
+            { note: 'D5', duration: 231, time: 4462, hand: 'right' },
+            { note: 'E5', duration: 231, time: 4693, hand: 'right' },
+            { note: 'D5', duration: 231, time: 4924, hand: 'right' },
+            { note: 'C#5', duration: 231, time: 5154, hand: 'right' },
 
-            // === MEASURE 9 === (14771-16617ms)
-            { note: 'F#5', duration: 462, time: 14771, hand: 'right' },
-            { note: 'D5', duration: 462, time: 15233, hand: 'right' },
-            { note: 'D5', duration: 231, time: 15694, hand: 'right' },
-            { note: 'E5', duration: 231, time: 15925, hand: 'right' },
-            { note: 'D5', duration: 231, time: 16156, hand: 'right' },
-            { note: 'D5', duration: 231, time: 16386, hand: 'right' },
+            // Bass: D major chords continue
+            { note: 'D3', duration: 462, time: 3692, hand: 'left' },
+            { note: 'A3', duration: 462, time: 3692, hand: 'left' },
+            { note: 'D4', duration: 462, time: 3692, hand: 'left' },
 
-            // === MEASURE 10 === (16617-18463ms)
-            { note: 'D5', duration: 231, time: 16617, hand: 'right' },
-            { note: 'E5', duration: 231, time: 16848, hand: 'right' },
-            { note: 'F#5', duration: 231, time: 17079, hand: 'right' },
-            { note: 'D5', duration: 231, time: 17309, hand: 'right' },
-            { note: 'D#5', duration: 462, time: 17540, hand: 'right' },
-            { note: 'E5', duration: 462, time: 18002, hand: 'right' },
+            { note: 'D3', duration: 462, time: 4154, hand: 'left' },
+            { note: 'A3', duration: 462, time: 4154, hand: 'left' },
+            { note: 'D4', duration: 462, time: 4154, hand: 'left' },
 
-            // === MEASURE 11 === (18463-20309ms)
-            { note: 'F#5', duration: 462, time: 18463, hand: 'right' },
-            { note: 'D5', duration: 693, time: 18925, hand: 'right' },
-            { note: 'A4', duration: 154, time: 19617, hand: 'right' },
-            { note: 'B4', duration: 154, time: 19771, hand: 'right' },
-            { note: 'C#5', duration: 154, time: 19925, hand: 'right' },
-            { note: 'D5', duration: 154, time: 20079, hand: 'right' },
-            { note: 'E5', duration: 154, time: 20233, hand: 'right' },
+            { note: 'D3', duration: 462, time: 4616, hand: 'left' },
+            { note: 'A3', duration: 462, time: 4616, hand: 'left' },
+            { note: 'D4', duration: 462, time: 4616, hand: 'left' },
 
-            // === MEASURE 12 === (20309-22156ms)
-            { note: 'F#5', duration: 154, time: 20309, hand: 'right' },
-            { note: 'D5', duration: 923, time: 20463, hand: 'right' },
-            { note: 'A4', duration: 154, time: 21386, hand: 'right' },
-            { note: 'B4', duration: 154, time: 21540, hand: 'right' },
-            { note: 'C#5', duration: 154, time: 21694, hand: 'right' },
-            { note: 'D5', duration: 154, time: 21848, hand: 'right' },
-            { note: 'E5', duration: 154, time: 22002, hand: 'right' },
+            { note: 'D3', duration: 462, time: 5077, hand: 'left' },
+            { note: 'A3', duration: 462, time: 5077, hand: 'left' },
+            { note: 'D4', duration: 462, time: 5077, hand: 'left' },
 
-            // === MEASURE 13-24 continue with similar pattern ===
-            // For brevity, showing main themes. Full piece continues...
-            { note: 'F#5', duration: 154, time: 22156, hand: 'right' },
-            { note: 'D5', duration: 1846, time: 22309, hand: 'right' }, // Whole note ending
+            // === MEASURE 4 === (5538-7384ms) Descending then ascending eighth note pattern
+            { note: 'B4', duration: 231, time: 5538, hand: 'right' },
+            { note: 'A4', duration: 231, time: 5769, hand: 'right' },
+            { note: 'G4', duration: 231, time: 6000, hand: 'right' },
+            { note: 'A4', duration: 231, time: 6231, hand: 'right' },
+            { note: 'B4', duration: 231, time: 6462, hand: 'right' },
+            { note: 'C#5', duration: 231, time: 6693, hand: 'right' },
+            { note: 'D5', duration: 231, time: 6923, hand: 'right' },
+            { note: 'E5', duration: 231, time: 7154, hand: 'right' },
+
+            // Bass: Continue accompaniment
+            { note: 'D3', duration: 462, time: 5538, hand: 'left' },
+            { note: 'A3', duration: 462, time: 5538, hand: 'left' },
+            { note: 'D4', duration: 462, time: 5538, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 6000, hand: 'left' },
+            { note: 'A3', duration: 462, time: 6000, hand: 'left' },
+            { note: 'D4', duration: 462, time: 6000, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 6462, hand: 'left' },
+            { note: 'A3', duration: 462, time: 6462, hand: 'left' },
+            { note: 'D4', duration: 462, time: 6462, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 6923, hand: 'left' },
+            { note: 'A3', duration: 462, time: 6923, hand: 'left' },
+            { note: 'D4', duration: 462, time: 6923, hand: 'left' },
+
+            // === MEASURE 5 === (7384-9230ms) Second phrase - held notes and triplet pickup
+            { note: 'D5', duration: 923, time: 7384, hand: 'right' },
+            { note: 'F#4', duration: 154, time: 8769, hand: 'right' },
+            { note: 'G4', duration: 154, time: 8923, hand: 'right' },
+            { note: 'A4', duration: 154, time: 9077, hand: 'right' },
+
+            // Bass: D major chords
+            { note: 'D3', duration: 462, time: 7384, hand: 'left' },
+            { note: 'A3', duration: 462, time: 7384, hand: 'left' },
+            { note: 'D4', duration: 462, time: 7384, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 7846, hand: 'left' },
+            { note: 'A3', duration: 462, time: 7846, hand: 'left' },
+            { note: 'D4', duration: 462, time: 7846, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 8308, hand: 'left' },
+            { note: 'A3', duration: 462, time: 8308, hand: 'left' },
+            { note: 'D4', duration: 462, time: 8308, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 8769, hand: 'left' },
+            { note: 'A3', duration: 462, time: 8769, hand: 'left' },
+            { note: 'D4', duration: 462, time: 8769, hand: 'left' },
+
+            // === MEASURE 6 === (9230-11076ms) Melodic development
+            { note: 'B4', duration: 231, time: 9230, hand: 'right' },
+            { note: 'C#5', duration: 231, time: 9461, hand: 'right' },
+            { note: 'D5', duration: 462, time: 9692, hand: 'right' },
+            { note: 'A4', duration: 231, time: 10154, hand: 'right' },
+            { note: 'B4', duration: 154, time: 10385, hand: 'right' },
+            { note: 'C#5', duration: 154, time: 10539, hand: 'right' },
+            { note: 'D5', duration: 154, time: 10693, hand: 'right' },
+            { note: 'E5', duration: 231, time: 10846, hand: 'right' },
+
+            // Bass: Chords continue
+            { note: 'D3', duration: 462, time: 9230, hand: 'left' },
+            { note: 'A3', duration: 462, time: 9230, hand: 'left' },
+            { note: 'D4', duration: 462, time: 9230, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 9692, hand: 'left' },
+            { note: 'A3', duration: 462, time: 9692, hand: 'left' },
+            { note: 'D4', duration: 462, time: 9692, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 10154, hand: 'left' },
+            { note: 'A3', duration: 462, time: 10154, hand: 'left' },
+            { note: 'D4', duration: 462, time: 10154, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 10615, hand: 'left' },
+            { note: 'A3', duration: 462, time: 10615, hand: 'left' },
+            { note: 'D4', duration: 462, time: 10615, hand: 'left' },
+
+            // === MEASURE 7 === (11076-12922ms) Scalar patterns
+            { note: 'D5', duration: 231, time: 11076, hand: 'right' },
+            { note: 'E5', duration: 231, time: 11307, hand: 'right' },
+            { note: 'F#5', duration: 231, time: 11538, hand: 'right' },
+            { note: 'G5', duration: 231, time: 11769, hand: 'right' },
+            { note: 'A5', duration: 231, time: 12000, hand: 'right' },
+            { note: 'G5', duration: 231, time: 12231, hand: 'right' },
+            { note: 'F#5', duration: 231, time: 12462, hand: 'right' },
+            { note: 'E5', duration: 231, time: 12693, hand: 'right' },
+
+            // Bass: Chords
+            { note: 'D3', duration: 462, time: 11076, hand: 'left' },
+            { note: 'A3', duration: 462, time: 11076, hand: 'left' },
+            { note: 'D4', duration: 462, time: 11076, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 11538, hand: 'left' },
+            { note: 'A3', duration: 462, time: 11538, hand: 'left' },
+            { note: 'D4', duration: 462, time: 11538, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 12000, hand: 'left' },
+            { note: 'A3', duration: 462, time: 12000, hand: 'left' },
+            { note: 'D4', duration: 462, time: 12000, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 12462, hand: 'left' },
+            { note: 'A3', duration: 462, time: 12462, hand: 'left' },
+            { note: 'D4', duration: 462, time: 12462, hand: 'left' },
+
+            // === MEASURE 8 === (12922-14768ms) Development with chromatic motion
+            { note: 'D5', duration: 231, time: 12922, hand: 'right' },
+            { note: 'C#5', duration: 231, time: 13153, hand: 'right' },
+            { note: 'B4', duration: 231, time: 13384, hand: 'right' },
+            { note: 'A4', duration: 231, time: 13615, hand: 'right' },
+            { note: 'G4', duration: 231, time: 13846, hand: 'right' },
+            { note: 'A4', duration: 231, time: 14077, hand: 'right' },
+            { note: 'B4', duration: 231, time: 14308, hand: 'right' },
+            { note: 'C#5', duration: 231, time: 14539, hand: 'right' },
+
+            // Bass: Shift to A major chord (A3-E4-A4) for dominant color
+            { note: 'A2', duration: 462, time: 12922, hand: 'left' },
+            { note: 'E3', duration: 462, time: 12922, hand: 'left' },
+            { note: 'A3', duration: 462, time: 12922, hand: 'left' },
+
+            { note: 'A2', duration: 462, time: 13384, hand: 'left' },
+            { note: 'E3', duration: 462, time: 13384, hand: 'left' },
+            { note: 'A3', duration: 462, time: 13384, hand: 'left' },
+
+            { note: 'A2', duration: 462, time: 13846, hand: 'left' },
+            { note: 'E3', duration: 462, time: 13846, hand: 'left' },
+            { note: 'A3', duration: 462, time: 13846, hand: 'left' },
+
+            { note: 'A2', duration: 462, time: 14308, hand: 'left' },
+            { note: 'E3', duration: 462, time: 14308, hand: 'left' },
+            { note: 'A3', duration: 462, time: 14308, hand: 'left' },
+
+            // === MEASURE 9 === (14768-16614ms) Climax and resolution
+            { note: 'D5', duration: 462, time: 14768, hand: 'right' },
+            { note: 'E5', duration: 231, time: 15230, hand: 'right' },
+            { note: 'F#5', duration: 231, time: 15461, hand: 'right' },
+            { note: 'G5', duration: 462, time: 15692, hand: 'right' },
+            { note: 'F#5', duration: 231, time: 16154, hand: 'right' },
+            { note: 'E5', duration: 231, time: 16385, hand: 'right' },
+
+            // Bass: Return to D major
+            { note: 'D3', duration: 462, time: 14768, hand: 'left' },
+            { note: 'A3', duration: 462, time: 14768, hand: 'left' },
+            { note: 'D4', duration: 462, time: 14768, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 15230, hand: 'left' },
+            { note: 'A3', duration: 462, time: 15230, hand: 'left' },
+            { note: 'D4', duration: 462, time: 15230, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 15692, hand: 'left' },
+            { note: 'A3', duration: 462, time: 15692, hand: 'left' },
+            { note: 'D4', duration: 462, time: 15692, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 16154, hand: 'left' },
+            { note: 'A3', duration: 462, time: 16154, hand: 'left' },
+            { note: 'D4', duration: 462, time: 16154, hand: 'left' },
+
+            // === MEASURE 10 === (16614-18460ms) Final phrase
+            { note: 'D5', duration: 923, time: 16614, hand: 'right' },
+            { note: 'C#5', duration: 231, time: 17537, hand: 'right' },
+            { note: 'D5', duration: 231, time: 17768, hand: 'right' },
+            { note: 'E5', duration: 231, time: 17999, hand: 'right' },
+            { note: 'F#5', duration: 231, time: 18230, hand: 'right' },
+
+            // Bass: Chords
+            { note: 'D3', duration: 462, time: 16614, hand: 'left' },
+            { note: 'A3', duration: 462, time: 16614, hand: 'left' },
+            { note: 'D4', duration: 462, time: 16614, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 17076, hand: 'left' },
+            { note: 'A3', duration: 462, time: 17076, hand: 'left' },
+            { note: 'D4', duration: 462, time: 17076, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 17537, hand: 'left' },
+            { note: 'A3', duration: 462, time: 17537, hand: 'left' },
+            { note: 'D4', duration: 462, time: 17537, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 17999, hand: 'left' },
+            { note: 'A3', duration: 462, time: 17999, hand: 'left' },
+            { note: 'D4', duration: 462, time: 17999, hand: 'left' },
+
+            // === MEASURE 11 === (18460-20306ms) Continuation
+            { note: 'G5', duration: 462, time: 18460, hand: 'right' },
+            { note: 'F#5', duration: 231, time: 18922, hand: 'right' },
+            { note: 'E5', duration: 231, time: 19153, hand: 'right' },
+            { note: 'D5', duration: 462, time: 19384, hand: 'right' },
+            { note: 'C#5', duration: 231, time: 19846, hand: 'right' },
+            { note: 'D5', duration: 231, time: 20077, hand: 'right' },
+
+            // Bass: Continue
+            { note: 'G2', duration: 462, time: 18460, hand: 'left' },
+            { note: 'D3', duration: 462, time: 18460, hand: 'left' },
+            { note: 'G3', duration: 462, time: 18460, hand: 'left' },
+
+            { note: 'G2', duration: 462, time: 18922, hand: 'left' },
+            { note: 'D3', duration: 462, time: 18922, hand: 'left' },
+            { note: 'G3', duration: 462, time: 18922, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 19384, hand: 'left' },
+            { note: 'A3', duration: 462, time: 19384, hand: 'left' },
+            { note: 'D4', duration: 462, time: 19384, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 19846, hand: 'left' },
+            { note: 'A3', duration: 462, time: 19846, hand: 'left' },
+            { note: 'D4', duration: 462, time: 19846, hand: 'left' },
+
+            // === MEASURE 12 === (20306-22152ms) Final resolution
+            { note: 'E5', duration: 462, time: 20306, hand: 'right' },
+            { note: 'D5', duration: 462, time: 20768, hand: 'right' },
+            { note: 'C#5', duration: 231, time: 21230, hand: 'right' },
+            { note: 'B4', duration: 231, time: 21461, hand: 'right' },
+            { note: 'A4', duration: 462, time: 21692, hand: 'right' },
+
+            // Bass: Final cadence
+            { note: 'A2', duration: 462, time: 20306, hand: 'left' },
+            { note: 'E3', duration: 462, time: 20306, hand: 'left' },
+            { note: 'A3', duration: 462, time: 20306, hand: 'left' },
+
+            { note: 'A2', duration: 462, time: 20768, hand: 'left' },
+            { note: 'E3', duration: 462, time: 20768, hand: 'left' },
+            { note: 'A3', duration: 462, time: 20768, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 21230, hand: 'left' },
+            { note: 'A3', duration: 462, time: 21230, hand: 'left' },
+            { note: 'D4', duration: 462, time: 21230, hand: 'left' },
+
+            { note: 'D3', duration: 462, time: 21692, hand: 'left' },
+            { note: 'A3', duration: 462, time: 21692, hand: 'left' },
+            { note: 'D4', duration: 462, time: 21692, hand: 'left' },
+
+            // === MEASURE 13 === (22152-23998ms) Closing phrase
+            { note: 'D5', duration: 1846, time: 22152, hand: 'right' }, // Whole note ending
+
+            // Bass: Final D major chord held
+            { note: 'D3', duration: 1846, time: 22152, hand: 'left' },
+            { note: 'A3', duration: 1846, time: 22152, hand: 'left' },
+            { note: 'D4', duration: 1846, time: 22152, hand: 'left' },
         ];
 
         let isPlaying = false;
@@ -1194,7 +1382,6 @@
 
             // Create ALL notes (including ones that should have already started)
             // This ensures everything is in sync
-            const fallDuration = 3000;
             zeldaTheme.forEach(noteData => {
                 // Only create notes that haven't finished yet
                 if (noteData.time + noteData.duration > startTime) {
