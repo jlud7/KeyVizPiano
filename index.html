@@ -936,41 +936,59 @@
             const fallDuration = 3000;
             const noteSpawnTime = noteData.time - fallDuration; // When note should appear
             const notePlayTime = noteData.time; // When note should play sound
+            const noteEndTime = noteData.time + noteData.duration;
 
-            // Calculate delays from current startOffset
-            const spawnDelay = Math.max(0, (noteSpawnTime - startOffset) / playbackSpeed);
-            const playDelay = Math.max(0, (notePlayTime - startOffset) / playbackSpeed);
+            // Calculate how far through the animation we should be
+            const timeSinceSpawn = startOffset - noteSpawnTime;
+            const animationProgress = Math.max(0, Math.min(1, timeSinceSpawn / fallDuration));
 
-            // Animate falling - schedule at spawn time
-            const animTimeout = setTimeout(() => {
-                noteElement.style.transition = `transform ${fallDuration / playbackSpeed}ms linear`;
+            // If note should have already spawned, position it mid-flight
+            if (timeSinceSpawn > 0 && startOffset < notePlayTime + noteData.duration) {
+                const currentY = -150 + (720 * animationProgress);
+                noteElement.style.top = `${currentY}px`;
+
+                // Continue animation from current position
+                const remainingTime = Math.max(0, fallDuration - timeSinceSpawn);
+                noteElement.style.transition = `transform ${remainingTime / playbackSpeed}ms linear`;
                 noteElement.style.transform = 'translateY(570px)';
-            }, spawnDelay);
-            playbackTimeouts.push(animTimeout);
+            } else {
+                // Note hasn't spawned yet, animate normally
+                const spawnDelay = Math.max(0, (noteSpawnTime - startOffset) / playbackSpeed);
+                const animTimeout = setTimeout(() => {
+                    noteElement.style.transition = `transform ${fallDuration / playbackSpeed}ms linear`;
+                    noteElement.style.transform = 'translateY(570px)';
+                }, spawnDelay);
+                playbackTimeouts.push(animTimeout);
+            }
 
-            // Play note at the correct absolute time
-            const playTimeout = setTimeout(() => {
-                if (isPlaying) {
-                    playNote(noteData.note);
-                    // Add lighting effect to the falling note
-                    noteElement.classList.add('playing');
-                    const stopTimeout = setTimeout(() => {
-                        stopNote(noteData.note);
-                        noteElement.classList.remove('playing');
-                    }, noteData.duration / playbackSpeed);
-                    noteTimeouts.push(stopTimeout);
-                }
-            }, playDelay);
-            noteTimeouts.push(playTimeout);
+            // Play note at the correct absolute time (only if it hasn't passed yet)
+            if (notePlayTime >= startOffset) {
+                const playDelay = (notePlayTime - startOffset) / playbackSpeed;
+                const playTimeout = setTimeout(() => {
+                    if (isPlaying) {
+                        playNote(noteData.note);
+                        // Add lighting effect to the falling note
+                        noteElement.classList.add('playing');
+                        const stopTimeout = setTimeout(() => {
+                            stopNote(noteData.note);
+                            noteElement.classList.remove('playing');
+                        }, noteData.duration / playbackSpeed);
+                        noteTimeouts.push(stopTimeout);
+                    }
+                }, playDelay);
+                noteTimeouts.push(playTimeout);
+            }
 
             // Remove element after it finishes playing
-            const removeDelay = playDelay + (noteData.duration / playbackSpeed) + 500; // Extra 500ms buffer
-            const removeTimeout = setTimeout(() => {
-                if (noteElement.parentNode) {
-                    noteElement.remove();
-                }
-            }, removeDelay);
-            noteTimeouts.push(removeTimeout);
+            if (noteEndTime > startOffset) {
+                const removeDelay = Math.max(0, (noteEndTime - startOffset) / playbackSpeed) + 500;
+                const removeTimeout = setTimeout(() => {
+                    if (noteElement.parentNode) {
+                        noteElement.remove();
+                    }
+                }, removeDelay);
+                noteTimeouts.push(removeTimeout);
+            }
 
             noteElements.push(noteElement);
 
@@ -1007,19 +1025,20 @@
             playPauseBtn.classList.add('playing');
             document.getElementById('stopBtn').disabled = false;
 
-            // Clear any existing elements
+            // Always clear to ensure clean state
             clearPlayback();
 
             currentTime = startTime;
             playbackStartTime = Date.now() - (startTime / playbackSpeed);
 
-            // Create notes that should appear from this point
-            // We need to show notes that will play within the next few seconds,
-            // accounting for the fall duration
+            // Create ALL notes (including ones that should have already started)
+            // This ensures everything is in sync
             const fallDuration = 3000;
-            const upcomingNotes = zeldaTheme.filter(n => n.time >= startTime - fallDuration);
-            upcomingNotes.forEach(noteData => {
-                createFallingNote(noteData, startTime);
+            zeldaTheme.forEach(noteData => {
+                // Only create notes that haven't finished yet
+                if (noteData.time + noteData.duration > startTime) {
+                    createFallingNote(noteData, startTime);
+                }
             });
 
             // Update time display
@@ -1044,7 +1063,7 @@
             playPauseBtn.classList.remove('playing');
             document.getElementById('stopBtn').disabled = false;
 
-            // Clear all timeouts
+            // Clear all timeouts and intervals
             clearPlayback();
 
             // Stop all active notes
