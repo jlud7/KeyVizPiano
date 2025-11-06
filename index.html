@@ -589,14 +589,18 @@
 
         const pianoKeys = generatePianoKeys();
 
-        // The Legend of Zelda Main Theme - ACCURATE Transcription
+        // The Legend of Zelda Main Theme - Enhanced Version
         // Key: D Major (F#, C#), Tempo: 130 BPM, Time: 4/4
-        // Carefully transcribed from official sheet music by Koji Kondo
         // Timing: whole=1846ms, half=923ms, quarter=462ms, eighth=231ms, triplet-eighth=154ms
 
         const zeldaTheme = [
-            // === MEASURE 1 === (0-1846ms)
+            // === MEASURE 1 === Opening phrase with triplets
             { note: 'D5', duration: 923, time: 0, hand: 'right' },
+            { note: 'D3', duration: 231, time: 0, hand: 'left' },
+            { note: 'A3', duration: 231, time: 231, hand: 'left' },
+            { note: 'D4', duration: 231, time: 462, hand: 'left' },
+            { note: 'A3', duration: 231, time: 693, hand: 'left' },
+
             { note: 'A4', duration: 154, time: 923, hand: 'right' },
             { note: 'B4', duration: 154, time: 1077, hand: 'right' },
             { note: 'C#5', duration: 154, time: 1231, hand: 'right' },
@@ -1083,43 +1087,33 @@
 
             highway.appendChild(noteElement);
 
-            // Calculate timing for note spawn and play
-            const fallDuration = 3000;
-            const noteSpawnTime = noteData.time - fallDuration; // When note should appear
-            const notePlayTime = noteData.time; // When note should play sound
+            // Simplified timing - notes fall and play when they hit the piano (at bottom)
+            const fallDuration = 2000; // 2 seconds to fall
+            const notePlayTime = noteData.time; // When note should play sound (when it hits piano)
+            const noteSpawnTime = notePlayTime - fallDuration; // Spawn 2 seconds before playing
             const noteEndTime = noteData.time + noteData.duration;
 
-            // Calculate how far through the animation we should be
-            const timeSinceSpawn = startOffset - noteSpawnTime;
-            const animationProgress = Math.max(0, Math.min(1, timeSinceSpawn / fallDuration));
+            // Calculate delays from current time
+            const spawnDelay = Math.max(0, (noteSpawnTime - startOffset) / playbackSpeed);
+            const playDelay = Math.max(0, (notePlayTime - startOffset) / playbackSpeed);
 
-            // If note should have already spawned, position it mid-flight
-            if (timeSinceSpawn > 0 && startOffset < notePlayTime + noteData.duration) {
-                const currentY = -150 + (720 * animationProgress);
-                noteElement.style.top = `${currentY}px`;
-
-                // Continue animation from current position
-                const remainingTime = Math.max(0, fallDuration - timeSinceSpawn);
-                noteElement.style.transition = `transform ${remainingTime / playbackSpeed}ms linear`;
-                noteElement.style.transform = 'translateY(570px)';
-            } else {
-                // Note hasn't spawned yet, animate normally
-                const spawnDelay = Math.max(0, (noteSpawnTime - startOffset) / playbackSpeed);
+            // Only create notes that haven't finished yet
+            if (noteEndTime > startOffset && notePlayTime > startOffset - fallDuration) {
+                // Start falling animation
                 const animTimeout = setTimeout(() => {
-                    noteElement.style.transition = `transform ${fallDuration / playbackSpeed}ms linear`;
-                    noteElement.style.transform = 'translateY(570px)';
+                    if (isPlaying) {
+                        noteElement.style.transition = `top ${fallDuration / playbackSpeed}ms linear`;
+                        noteElement.style.top = '400px'; // Fall to piano level
+                    }
                 }, spawnDelay);
                 playbackTimeouts.push(animTimeout);
-            }
 
-            // Play note at the correct absolute time (only if it hasn't passed yet)
-            if (notePlayTime >= startOffset) {
-                const playDelay = (notePlayTime - startOffset) / playbackSpeed;
+                // Play sound when note reaches piano
                 const playTimeout = setTimeout(() => {
                     if (isPlaying) {
                         playNote(noteData.note);
-                        // Add lighting effect to the falling note
                         noteElement.classList.add('playing');
+
                         const stopTimeout = setTimeout(() => {
                             stopNote(noteData.note);
                             noteElement.classList.remove('playing');
@@ -1128,10 +1122,8 @@
                     }
                 }, playDelay);
                 noteTimeouts.push(playTimeout);
-            }
 
-            // Remove element after it finishes playing
-            if (noteEndTime > startOffset) {
+                // Remove note after it finishes
                 const removeDelay = Math.max(0, (noteEndTime - startOffset) / playbackSpeed) + 500;
                 const removeTimeout = setTimeout(() => {
                     if (noteElement.parentNode) {
@@ -1142,7 +1134,6 @@
             }
 
             noteElements.push(noteElement);
-
             return noteElement;
         }
 
