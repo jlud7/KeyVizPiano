@@ -608,16 +608,26 @@
             { note: 'E5', duration: 154, time: 1539, hand: 'right' },
             { note: 'F#5', duration: 154, time: 1693, hand: 'right' },
 
-            // === MEASURE 2 === (1846-3693ms)
+            // === MEASURE 2 ===
             { note: 'D5', duration: 462, time: 1846, hand: 'right' },
+            { note: 'D3', duration: 231, time: 1846, hand: 'left' },
+            { note: 'A3', duration: 231, time: 2077, hand: 'left' },
+            { note: 'D4', duration: 231, time: 2308, hand: 'left' },
+            { note: 'A3', duration: 231, time: 2539, hand: 'left' },
+
             { note: 'A4', duration: 154, time: 2308, hand: 'right' },
             { note: 'B4', duration: 154, time: 2462, hand: 'right' },
             { note: 'C#5', duration: 154, time: 2616, hand: 'right' },
             { note: 'D5', duration: 154, time: 2770, hand: 'right' },
             { note: 'E5', duration: 154, time: 2924, hand: 'right' },
             { note: 'F#5', duration: 154, time: 3078, hand: 'right' },
+
             { note: 'D5', duration: 231, time: 3231, hand: 'right' },
             { note: 'A4', duration: 154, time: 3462, hand: 'right' },
+            { note: 'D3', duration: 231, time: 2770, hand: 'left' },
+            { note: 'A3', duration: 231, time: 3001, hand: 'left' },
+            { note: 'D4', duration: 231, time: 3232, hand: 'left' },
+            { note: 'A3', duration: 231, time: 3463, hand: 'left' },
 
             // === MEASURE 3 === (3693-5540ms)
             { note: 'B4', duration: 154, time: 3693, hand: 'right' },
@@ -795,9 +805,7 @@
             addKeySignature(staffTreble, 'treble');
             addKeySignature(staffBass, 'bass');
 
-            // Note positions for treble clef (pixels from top of staff)
-            // Lines (bottom to top): E4(100), G4(80), B4(60), D5(40), F5(20)
-            // Spaces: F4(90), A4(70), C5(50), E5(30)
+            // Note positions for treble clef
             const trebleNotePositions = {
                 'C4': 110, 'C#4': 110, 'D4': 105, 'D#4': 105,
                 'E4': 100, 'F4': 95, 'F#4': 95, 'G4': 90, 'G#4': 90,
@@ -807,16 +815,30 @@
                 'A5': 50, 'A#5': 50, 'B5': 45
             };
 
+            // Note positions for bass clef
+            const bassNotePositions = {
+                'C2': 110, 'C#2': 110, 'D2': 105, 'D#2': 105,
+                'E2': 100, 'F2': 95, 'F#2': 95, 'G2': 90, 'G#2': 90,
+                'A2': 85, 'A#2': 85, 'B2': 80,
+                'C3': 75, 'C#3': 75, 'D3': 70, 'D#3': 70,
+                'E3': 65, 'F3': 60, 'F#3': 60, 'G3': 55, 'G#3': 55,
+                'A3': 50, 'A#3': 50, 'B3': 45,
+                'C4': 40, 'C#4': 40, 'D4': 35, 'D#4': 35
+            };
+
             // Calculate total width needed
             const noteSpacing = 40;
             const startX = 140;
             const totalWidth = Math.max(1400, startX + zeldaTheme.length * noteSpacing);
             sheetMusic.style.width = `${totalWidth}px`;
 
-            // Draw notes on treble staff
+            // Draw notes on appropriate staff
             zeldaTheme.forEach((noteData, index) => {
                 const noteX = startX + (noteData.time / totalDuration) * (totalWidth - startX - 100);
-                const noteY = trebleNotePositions[noteData.note] || 70;
+                const isRightHand = noteData.hand === 'right';
+                const notePositions = isRightHand ? trebleNotePositions : bassNotePositions;
+                const targetStaff = isRightHand ? staffTreble : staffBass;
+                const noteY = notePositions[noteData.note] || 70;
 
                 const noteContainer = document.createElement('div');
                 noteContainer.style.position = 'absolute';
@@ -833,17 +855,14 @@
                     noteHead.appendChild(stem);
                 }
 
-                // Don't show sharp symbols (they're in key signature)
-                // Just show the note
-
-                // Add note label below
+                // Add note label
                 const label = document.createElement('div');
                 label.className = 'note-label-staff';
                 label.textContent = noteData.note;
                 noteHead.appendChild(label);
 
                 noteContainer.appendChild(noteHead);
-                staffTreble.appendChild(noteContainer);
+                targetStaff.appendChild(noteContainer);
 
                 // Store reference for progress tracking
                 noteHead.dataset.time = noteData.time;
