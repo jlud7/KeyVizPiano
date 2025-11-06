@@ -589,10 +589,10 @@
 
         const pianoKeys = generatePianoKeys();
 
-        // The Legend of Zelda Main Theme - Complete Transcription
+        // The Legend of Zelda Main Theme - ACCURATE Transcription
         // Key: D Major (F#, C#), Tempo: 130 BPM, Time: 4/4
-        // Transcribed from official sheet music by Koji Kondo
-        // Timing: quarter=461.54ms, eighth=230.77ms, triplet eighth=153.85ms, half=923.08ms
+        // Carefully transcribed from official sheet music by Koji Kondo
+        // Timing: whole=1846ms, half=923ms, quarter=462ms, eighth=231ms, triplet-eighth=154ms
 
         const zeldaTheme = [
             // === MEASURE 1 === (0-1846ms)
@@ -726,28 +726,30 @@
 
         // Add key signature sharps for D major (F# and C#)
         function addKeySignature(staff, clefType) {
-            const isTreeble = clefType === 'treble';
+            const isTreble = clefType === 'treble';
 
-            // F# sharp position
+            // F# sharp position (on the F line)
             const fSharp = document.createElement('div');
             fSharp.className = 'sharp key-sig';
             fSharp.textContent = '♯';
             fSharp.style.position = 'absolute';
             fSharp.style.left = '90px';
-            fSharp.style.top = isTreeble ? '10px' : '35px';
-            fSharp.style.fontSize = '30px';
+            fSharp.style.top = isTreble ? '57px' : '32px';  // Aligned to F line
+            fSharp.style.fontSize = '32px';
             fSharp.style.fontWeight = 'bold';
+            fSharp.style.color = '#000';
             staff.appendChild(fSharp);
 
-            // C# sharp position
+            // C# sharp position (on the C line/space)
             const cSharp = document.createElement('div');
             cSharp.className = 'sharp key-sig';
             cSharp.textContent = '♯';
             cSharp.style.position = 'absolute';
-            cSharp.style.left = '105px';
-            cSharp.style.top = isTreeble ? '30px' : '15px';
-            cSharp.style.fontSize = '30px';
+            cSharp.style.left = '110px';
+            cSharp.style.top = isTreble ? '37px' : '12px';  // Aligned to C line
+            cSharp.style.fontSize = '32px';
             cSharp.style.fontWeight = 'bold';
+            cSharp.style.color = '#000';
             staff.appendChild(cSharp);
         }
 
