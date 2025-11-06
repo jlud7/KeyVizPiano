@@ -72,6 +72,16 @@
             box-shadow: 0 5px 20px rgba(58, 123, 213, 0.4);
         }
 
+        #pauseBtn {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        #pauseBtn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(240, 147, 251, 0.4);
+        }
+
         #stopBtn {
             background: linear-gradient(45deg, #ff416c, #ff4b2b);
             color: white;
@@ -173,16 +183,41 @@
             position: absolute;
             border-radius: 3px;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 11px;
+            transition: box-shadow 0.1s, transform 0.1s;
         }
 
         .falling-note.white-key {
             background: linear-gradient(180deg, #4CAF50, #8BC34A);
             border: 1px solid #2E7D32;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
         }
 
         .falling-note.black-key {
             background: linear-gradient(180deg, #FF9800, #FFC107);
             border: 1px solid #F57C00;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .falling-note.playing {
+            box-shadow: 0 0 25px rgba(255, 255, 0, 0.9), 0 0 50px rgba(255, 255, 0, 0.6);
+            transform: scale(1.1);
+        }
+
+        .falling-note.white-key.playing {
+            background: linear-gradient(180deg, #7FFF7F, #50E050);
+            border: 2px solid #FFD700;
+        }
+
+        .falling-note.black-key.playing {
+            background: linear-gradient(180deg, #FFD700, #FFA500);
+            border: 2px solid #FF6347;
         }
 
         .piano-container {
@@ -327,6 +362,113 @@
             font-weight: bold;
         }
 
+        .sheet-music-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow-x: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .sheet-music {
+            position: relative;
+            width: 100%;
+            min-height: 200px;
+            background: white;
+        }
+
+        .staff {
+            position: relative;
+            height: 160px;
+            margin: 20px 0;
+        }
+
+        .staff-line {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background: #000;
+            left: 0;
+        }
+
+        .clef {
+            position: absolute;
+            left: 10px;
+            top: 20px;
+            font-size: 60px;
+            font-weight: bold;
+            color: #000;
+            font-family: 'Times New Roman', serif;
+        }
+
+        .note-on-staff {
+            position: absolute;
+            width: 20px;
+            height: 15px;
+            background: #000;
+            border-radius: 50%;
+            transform: rotate(-20deg);
+        }
+
+        .note-stem {
+            position: absolute;
+            width: 2px;
+            height: 35px;
+            background: #000;
+            right: 0;
+            top: -35px;
+        }
+
+        .note-on-staff.whole-note {
+            background: white;
+            border: 2px solid #000;
+        }
+
+        .note-on-staff.half-note {
+            background: white;
+            border: 2px solid #000;
+        }
+
+        .sharp, .flat {
+            position: absolute;
+            font-size: 20px;
+            font-weight: bold;
+            left: -12px;
+            top: -5px;
+        }
+
+        .note-label-staff {
+            position: absolute;
+            bottom: -20px;
+            font-size: 10px;
+            color: #666;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .progress-cursor {
+            position: absolute;
+            width: 3px;
+            height: 100%;
+            background: rgba(255, 0, 0, 0.7);
+            top: 0;
+            left: 0;
+            z-index: 10;
+            transition: left 0.1s linear;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        .measure-line {
+            position: absolute;
+            width: 1px;
+            height: 100%;
+            background: #000;
+            top: 0;
+        }
+
     </style>
 </head>
 <body>
@@ -336,6 +478,7 @@
     <div class="container">
         <div class="controls">
             <button id="playBtn">▶ Play</button>
+            <button id="pauseBtn">⏸ Pause</button>
             <button id="stopBtn">⏹ Stop</button>
             <div class="seek-control">
                 <label for="seekSlider">Seek:</label>
@@ -352,6 +495,15 @@
             </div>
         </div>
 
+        <div class="sheet-music-container">
+            <div class="sheet-music" id="sheetMusic">
+                <div class="staff" id="staff">
+                    <!-- Staff lines will be generated by JavaScript -->
+                </div>
+                <div class="progress-cursor" id="progressCursor"></div>
+            </div>
+        </div>
+
         <div class="visualizer">
             <div class="note-highway" id="noteHighway"></div>
         </div>
@@ -361,9 +513,10 @@
         </div>
 
         <div class="info">
-            <p>🎮 Click Play to start the visualization | Use the seek bar to jump to any part</p>
-            <p>🎹 3-octave piano (C3-C6) optimized for the Zelda theme | Middle C (C4) highlighted in blue</p>
-            <p>🎵 Click on the piano keys to play notes | Touch-screen compatible</p>
+            <p>🎮 Controls: Play starts/resumes | Pause keeps your position | Stop returns to beginning</p>
+            <p>🎼 Sheet music displays above with real-time progress cursor - follow along to learn!</p>
+            <p>🎹 Falling notes show note names (C4, F5, etc.) and glow when played</p>
+            <p>⌨️ Click piano keys to play notes manually | Fully touch-screen compatible</p>
         </div>
     </div>
 
@@ -403,57 +556,60 @@
 
         // Zelda Theme notes with proper octave notation
         const zeldaTheme = [
-            // Opening phrase
-            { note: 'A4', duration: 1000, time: 0 },
-            { note: 'E4', duration: 500, time: 1000 },
-            { note: 'A4', duration: 500, time: 1500 },
-            { note: 'A4', duration: 250, time: 2000 },
-            { note: 'B4', duration: 250, time: 2250 },
-            { note: 'C5', duration: 250, time: 2500 },
-            { note: 'D5', duration: 250, time: 2750 },
-            { note: 'E5', duration: 1000, time: 3000 },
+            // Opening fanfare - Measure 1
+            { note: 'A#4', duration: 500, time: 0 },
+            { note: 'F4', duration: 500, time: 500 },
+            { note: 'A#4', duration: 500, time: 1000 },
 
-            // Second phrase
-            { note: 'E5', duration: 250, time: 4000 },
-            { note: 'E5', duration: 250, time: 4250 },
-            { note: 'F5', duration: 250, time: 4500 },
-            { note: 'G5', duration: 250, time: 4750 },
-            { note: 'A5', duration: 1000, time: 5000 },
+            // Measure 2 - Ascending run
+            { note: 'A#4', duration: 250, time: 1500 },
+            { note: 'C5', duration: 250, time: 1750 },
+            { note: 'D5', duration: 250, time: 2000 },
+            { note: 'D#5', duration: 250, time: 2250 },
+            { note: 'F5', duration: 500, time: 2500 },
 
-            // Third phrase
-            { note: 'A5', duration: 250, time: 6000 },
-            { note: 'G5', duration: 250, time: 6250 },
-            { note: 'F5', duration: 250, time: 6500 },
-            { note: 'G5', duration: 250, time: 6750 },
-            { note: 'F5', duration: 250, time: 7000 },
-            { note: 'E5', duration: 250, time: 7250 },
-            { note: 'D5', duration: 250, time: 7500 },
-            { note: 'D5', duration: 250, time: 7750 },
-            { note: 'E5', duration: 250, time: 8000 },
-            { note: 'F5', duration: 250, time: 8250 },
-            { note: 'E5', duration: 500, time: 8500 },
-            { note: 'E5', duration: 500, time: 9000 },
-            { note: 'D5', duration: 500, time: 9500 },
-            { note: 'C5', duration: 500, time: 10000 },
-            { note: 'D5', duration: 500, time: 10500 },
-            { note: 'E5', duration: 1000, time: 11000 },
+            // Measure 3 - Higher run
+            { note: 'F5', duration: 250, time: 3000 },
+            { note: 'F5', duration: 250, time: 3250 },
+            { note: 'F#5', duration: 250, time: 3500 },
+            { note: 'G#5', duration: 250, time: 3750 },
+            { note: 'A#5', duration: 500, time: 4000 },
 
-            // Repeat section
-            { note: 'A4', duration: 1000, time: 12000 },
-            { note: 'E4', duration: 500, time: 13000 },
-            { note: 'A4', duration: 500, time: 13500 },
-            { note: 'A4', duration: 250, time: 14000 },
-            { note: 'B4', duration: 250, time: 14250 },
-            { note: 'C5', duration: 250, time: 14500 },
-            { note: 'D5', duration: 250, time: 14750 },
-            { note: 'E5', duration: 1000, time: 15000 },
+            // Measure 4 - Descending phrase
+            { note: 'A#5', duration: 250, time: 4500 },
+            { note: 'G#5', duration: 250, time: 4750 },
+            { note: 'F#5', duration: 250, time: 5000 },
+            { note: 'G#5', duration: 250, time: 5250 },
+            { note: 'F#5', duration: 250, time: 5500 },
+            { note: 'F5', duration: 250, time: 5750 },
+            { note: 'D#5', duration: 500, time: 6000 },
 
-            // Final phrase
-            { note: 'E5', duration: 250, time: 16000 },
-            { note: 'E5', duration: 250, time: 16250 },
-            { note: 'F#5', duration: 250, time: 16500 },
-            { note: 'G#5', duration: 250, time: 16750 },
-            { note: 'A5', duration: 1500, time: 17000 },
+            // Measure 5 - Continuing descent
+            { note: 'D#5', duration: 250, time: 6500 },
+            { note: 'F5', duration: 250, time: 6750 },
+            { note: 'F#5', duration: 250, time: 7000 },
+            { note: 'F5', duration: 250, time: 7250 },
+            { note: 'F5', duration: 250, time: 7500 },
+            { note: 'D#5', duration: 250, time: 7750 },
+            { note: 'D5', duration: 500, time: 8000 },
+
+            // Measure 6 - Resolution phrase
+            { note: 'D5', duration: 250, time: 8500 },
+            { note: 'D#5', duration: 250, time: 8750 },
+            { note: 'F5', duration: 250, time: 9000 },
+            { note: 'D#5', duration: 250, time: 9250 },
+            { note: 'D5', duration: 250, time: 9500 },
+            { note: 'C5', duration: 250, time: 9750 },
+            { note: 'D5', duration: 500, time: 10000 },
+
+            // Measure 7 - Building up
+            { note: 'D#5', duration: 500, time: 10500 },
+            { note: 'F5', duration: 500, time: 11000 },
+            { note: 'F#5', duration: 500, time: 11500 },
+
+            // Measure 8 - Finale
+            { note: 'G#5', duration: 500, time: 12000 },
+            { note: 'A#5', duration: 1000, time: 12500 },
         ];
 
         let isPlaying = false;
@@ -465,6 +621,108 @@
         let playbackStartTime = 0;
         let playbackInterval;
         let totalDuration = Math.max(...zeldaTheme.map(n => n.time + n.duration));
+
+        // Create sheet music display
+        function createSheetMusic() {
+            const staff = document.getElementById('staff');
+            const sheetMusic = document.getElementById('sheetMusic');
+
+            // Draw staff lines (5 lines for treble clef)
+            for (let i = 0; i < 5; i++) {
+                const line = document.createElement('div');
+                line.className = 'staff-line';
+                line.style.top = `${40 + i * 20}px`;
+                staff.appendChild(line);
+            }
+
+            // Add treble clef symbol
+            const clef = document.createElement('div');
+            clef.className = 'clef';
+            clef.innerHTML = '𝄞';
+            staff.appendChild(clef);
+
+            // Note positions on the staff (middle C is below the staff)
+            // Staff line positions from bottom to top: E4, G4, B4, D5, F5
+            const notePositions = {
+                'C4': 140, 'C#4': 140, 'D4': 130, 'D#4': 130,
+                'E4': 120, 'F4': 110, 'F#4': 110, 'G4': 100, 'G#4': 100,
+                'A4': 90, 'A#4': 90, 'B4': 80,
+                'C5': 70, 'C#5': 70, 'D5': 60, 'D#5': 60,
+                'E5': 50, 'F5': 40, 'F#5': 40, 'G5': 30, 'G#5': 30,
+                'A5': 20, 'A#5': 20, 'B5': 10
+            };
+
+            // Calculate total width needed
+            const noteSpacing = 60;
+            const startX = 80;
+            const totalWidth = Math.max(1200, startX + zeldaTheme.length * noteSpacing);
+            sheetMusic.style.width = `${totalWidth}px`;
+
+            // Draw notes
+            zeldaTheme.forEach((noteData, index) => {
+                const noteX = startX + (noteData.time / totalDuration) * (totalWidth - startX - 100);
+                const noteY = notePositions[noteData.note] || 70;
+
+                const noteContainer = document.createElement('div');
+                noteContainer.style.position = 'absolute';
+                noteContainer.style.left = `${noteX}px`;
+                noteContainer.style.top = `${noteY}px`;
+
+                const noteHead = document.createElement('div');
+                noteHead.className = 'note-on-staff';
+
+                // Add stem for eighth and quarter notes
+                if (noteData.duration < 800) {
+                    const stem = document.createElement('div');
+                    stem.className = 'note-stem';
+                    noteHead.appendChild(stem);
+                }
+
+                // Add sharp or flat symbol
+                if (noteData.note.includes('#')) {
+                    const sharp = document.createElement('span');
+                    sharp.className = 'sharp';
+                    sharp.textContent = '♯';
+                    noteHead.appendChild(sharp);
+                }
+
+                // Add note label below
+                const label = document.createElement('div');
+                label.className = 'note-label-staff';
+                label.textContent = noteData.note;
+                noteHead.appendChild(label);
+
+                noteContainer.appendChild(noteHead);
+                staff.appendChild(noteContainer);
+
+                // Store reference for progress tracking
+                noteHead.dataset.time = noteData.time;
+            });
+
+            // Add measure lines every few beats
+            for (let i = 0; i < 10; i++) {
+                const measureLine = document.createElement('div');
+                measureLine.className = 'measure-line';
+                measureLine.style.left = `${startX + i * (totalWidth - startX) / 10}px`;
+                staff.appendChild(measureLine);
+            }
+        }
+
+        // Update sheet music progress cursor
+        function updateSheetMusicCursor() {
+            const cursor = document.getElementById('progressCursor');
+            const sheetMusic = document.getElementById('sheetMusic');
+            const sheetWidth = sheetMusic.offsetWidth;
+
+            const progress = currentTime / totalDuration;
+            const cursorPosition = 80 + progress * (sheetWidth - 180);
+            cursor.style.left = `${cursorPosition}px`;
+
+            // Auto-scroll the sheet music container
+            const container = document.querySelector('.sheet-music-container');
+            const scrollPosition = Math.max(0, cursorPosition - container.offsetWidth / 2);
+            container.scrollLeft = scrollPosition;
+        }
 
         // Create piano keys
         function createPiano() {
@@ -672,24 +930,33 @@
             noteElement.style.top = '-150px';
             noteElement.style.borderRadius = '3px';
 
+            // Add note label
+            noteElement.textContent = noteData.note;
+
             highway.appendChild(noteElement);
 
-            // Calculate actual time with offset
-            const actualDelay = Math.max(0, (noteData.time - startOffset) / playbackSpeed);
+            // Calculate when note should START FALLING (3 seconds before it plays)
+            const fallDuration = 3000;
+            const actualDelay = Math.max(0, (noteData.time - fallDuration - startOffset) / playbackSpeed);
 
             // Animate falling
             const animTimeout = setTimeout(() => {
-                noteElement.style.transition = `transform ${3000 / playbackSpeed}ms linear`;
+                noteElement.style.transition = `transform ${fallDuration / playbackSpeed}ms linear`;
                 noteElement.style.transform = 'translateY(570px)';
 
-                // Play note when it reaches the piano
+                // Play note when it reaches the piano (after fall duration)
                 const playTimeout = setTimeout(() => {
                     if (isPlaying) {
                         playNote(noteData.note);
-                        const stopTimeout = setTimeout(() => stopNote(noteData.note), noteData.duration / playbackSpeed);
+                        // Add lighting effect to the falling note
+                        noteElement.classList.add('playing');
+                        const stopTimeout = setTimeout(() => {
+                            stopNote(noteData.note);
+                            noteElement.classList.remove('playing');
+                        }, noteData.duration / playbackSpeed);
                         noteTimeouts.push(stopTimeout);
                     }
-                }, 3000 / playbackSpeed);
+                }, fallDuration / playbackSpeed);
                 noteTimeouts.push(playTimeout);
 
                 // Remove element after animation
@@ -722,6 +989,9 @@
 
             timeDisplay.textContent = `${currentMin}:${currentSec.toString().padStart(2, '0')} / ${totalMin}:${totalSec.toString().padStart(2, '0')}`;
             seekSlider.value = (currentTime / totalDuration) * 100;
+
+            // Update sheet music cursor
+            updateSheetMusicCursor();
         }
 
         // Playback control
@@ -730,6 +1000,7 @@
             isPlaying = true;
 
             document.getElementById('playBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
             document.getElementById('stopBtn').disabled = false;
 
             // Clear any existing elements
@@ -739,7 +1010,10 @@
             playbackStartTime = Date.now() - (startTime / playbackSpeed);
 
             // Create notes that should appear from this point
-            const upcomingNotes = zeldaTheme.filter(n => n.time >= startTime - 3000);
+            // We need to show notes that will play within the next few seconds,
+            // accounting for the fall duration
+            const fallDuration = 3000;
+            const upcomingNotes = zeldaTheme.filter(n => n.time >= startTime - fallDuration);
             upcomingNotes.forEach(noteData => {
                 createFallingNote(noteData, startTime);
             });
@@ -757,10 +1031,35 @@
             }, 100);
         }
 
+        function pausePlayback() {
+            if (!isPlaying) return;
+            isPlaying = false;
+
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+
+            // Clear all timeouts
+            clearPlayback();
+
+            // Stop all active notes
+            Object.keys(activeOscillators).forEach(note => stopNote(note));
+
+            // Clear interval
+            if (playbackInterval) {
+                clearInterval(playbackInterval);
+                playbackInterval = null;
+            }
+
+            // Keep current time (don't reset like stop does)
+            updateTimeDisplay();
+        }
+
         function stopPlayback() {
             isPlaying = false;
 
             document.getElementById('playBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
             document.getElementById('stopBtn').disabled = true;
 
             // Clear all timeouts
@@ -775,7 +1074,7 @@
                 playbackInterval = null;
             }
 
-            // Reset time
+            // Reset time to beginning
             currentTime = 0;
             updateTimeDisplay();
         }
@@ -819,6 +1118,8 @@
             startPlayback(currentTime);
         });
 
+        document.getElementById('pauseBtn').addEventListener('click', pausePlayback);
+
         document.getElementById('stopBtn').addEventListener('click', stopPlayback);
 
         document.getElementById('seekSlider').addEventListener('input', (e) => {
@@ -850,8 +1151,10 @@
         });
 
         // Initialize
+        createSheetMusic();
         createPiano();
         updateTimeDisplay();
+        document.getElementById('pauseBtn').disabled = true;
         document.getElementById('stopBtn').disabled = true;
 
         // Add measure markers
