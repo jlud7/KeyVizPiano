@@ -62,23 +62,21 @@
             text-transform: uppercase;
         }
 
-        #playBtn {
+        #playPauseBtn {
             background: linear-gradient(45deg, #00d2ff, #3a7bd5);
             color: white;
         }
 
-        #playBtn:hover:not(:disabled) {
+        #playPauseBtn:hover:not(:disabled) {
             transform: scale(1.05);
             box-shadow: 0 5px 20px rgba(58, 123, 213, 0.4);
         }
 
-        #pauseBtn {
+        #playPauseBtn.playing {
             background: linear-gradient(45deg, #f093fb, #f5576c);
-            color: white;
         }
 
-        #pauseBtn:hover:not(:disabled) {
-            transform: scale(1.05);
+        #playPauseBtn.playing:hover:not(:disabled) {
             box-shadow: 0 5px 20px rgba(240, 147, 251, 0.4);
         }
 
@@ -477,8 +475,7 @@
 
     <div class="container">
         <div class="controls">
-            <button id="playBtn">▶ Play</button>
-            <button id="pauseBtn">⏸ Pause</button>
+            <button id="playPauseBtn">▶ Play</button>
             <button id="stopBtn">⏹ Stop</button>
             <div class="seek-control">
                 <label for="seekSlider">Seek:</label>
@@ -513,7 +510,7 @@
         </div>
 
         <div class="info">
-            <p>🎮 Controls: Play starts/resumes | Pause keeps your position | Stop returns to beginning</p>
+            <p>🎮 Controls: Play/Pause button toggles playback | Stop returns to beginning</p>
             <p>🎼 Sheet music displays above with real-time progress cursor - follow along to learn!</p>
             <p>🎹 Falling notes show note names (C4, F5, etc.) and glow when played</p>
             <p>⌨️ Click piano keys to play notes manually | Fully touch-screen compatible</p>
@@ -935,40 +932,46 @@
 
             highway.appendChild(noteElement);
 
-            // Calculate when note should START FALLING (3 seconds before it plays)
+            // Calculate timing for note spawn and play
             const fallDuration = 3000;
-            const actualDelay = Math.max(0, (noteData.time - fallDuration - startOffset) / playbackSpeed);
+            const noteSpawnTime = noteData.time - fallDuration; // When note should appear
+            const notePlayTime = noteData.time; // When note should play sound
 
-            // Animate falling
+            // Calculate delays from current startOffset
+            const spawnDelay = Math.max(0, (noteSpawnTime - startOffset) / playbackSpeed);
+            const playDelay = Math.max(0, (notePlayTime - startOffset) / playbackSpeed);
+
+            // Animate falling - schedule at spawn time
             const animTimeout = setTimeout(() => {
                 noteElement.style.transition = `transform ${fallDuration / playbackSpeed}ms linear`;
                 noteElement.style.transform = 'translateY(570px)';
-
-                // Play note when it reaches the piano (after fall duration)
-                const playTimeout = setTimeout(() => {
-                    if (isPlaying) {
-                        playNote(noteData.note);
-                        // Add lighting effect to the falling note
-                        noteElement.classList.add('playing');
-                        const stopTimeout = setTimeout(() => {
-                            stopNote(noteData.note);
-                            noteElement.classList.remove('playing');
-                        }, noteData.duration / playbackSpeed);
-                        noteTimeouts.push(stopTimeout);
-                    }
-                }, fallDuration / playbackSpeed);
-                noteTimeouts.push(playTimeout);
-
-                // Remove element after animation
-                const removeTimeout = setTimeout(() => {
-                    if (noteElement.parentNode) {
-                        noteElement.remove();
-                    }
-                }, 3500 / playbackSpeed);
-                noteTimeouts.push(removeTimeout);
-            }, actualDelay);
-
+            }, spawnDelay);
             playbackTimeouts.push(animTimeout);
+
+            // Play note at the correct absolute time
+            const playTimeout = setTimeout(() => {
+                if (isPlaying) {
+                    playNote(noteData.note);
+                    // Add lighting effect to the falling note
+                    noteElement.classList.add('playing');
+                    const stopTimeout = setTimeout(() => {
+                        stopNote(noteData.note);
+                        noteElement.classList.remove('playing');
+                    }, noteData.duration / playbackSpeed);
+                    noteTimeouts.push(stopTimeout);
+                }
+            }, playDelay);
+            noteTimeouts.push(playTimeout);
+
+            // Remove element after it finishes playing
+            const removeDelay = playDelay + (noteData.duration / playbackSpeed) + 500; // Extra 500ms buffer
+            const removeTimeout = setTimeout(() => {
+                if (noteElement.parentNode) {
+                    noteElement.remove();
+                }
+            }, removeDelay);
+            noteTimeouts.push(removeTimeout);
+
             noteElements.push(noteElement);
 
             return noteElement;
@@ -999,8 +1002,9 @@
             if (isPlaying) return;
             isPlaying = true;
 
-            document.getElementById('playBtn').disabled = true;
-            document.getElementById('pauseBtn').disabled = false;
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            playPauseBtn.innerHTML = '⏸ Pause';
+            playPauseBtn.classList.add('playing');
             document.getElementById('stopBtn').disabled = false;
 
             // Clear any existing elements
@@ -1035,8 +1039,9 @@
             if (!isPlaying) return;
             isPlaying = false;
 
-            document.getElementById('playBtn').disabled = false;
-            document.getElementById('pauseBtn').disabled = true;
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            playPauseBtn.innerHTML = '▶ Play';
+            playPauseBtn.classList.remove('playing');
             document.getElementById('stopBtn').disabled = false;
 
             // Clear all timeouts
@@ -1058,8 +1063,9 @@
         function stopPlayback() {
             isPlaying = false;
 
-            document.getElementById('playBtn').disabled = false;
-            document.getElementById('pauseBtn').disabled = true;
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            playPauseBtn.innerHTML = '▶ Play';
+            playPauseBtn.classList.remove('playing');
             document.getElementById('stopBtn').disabled = true;
 
             // Clear all timeouts
@@ -1114,11 +1120,13 @@
         }
 
         // Event listeners
-        document.getElementById('playBtn').addEventListener('click', () => {
-            startPlayback(currentTime);
+        document.getElementById('playPauseBtn').addEventListener('click', () => {
+            if (isPlaying) {
+                pausePlayback();
+            } else {
+                startPlayback(currentTime);
+            }
         });
-
-        document.getElementById('pauseBtn').addEventListener('click', pausePlayback);
 
         document.getElementById('stopBtn').addEventListener('click', stopPlayback);
 
@@ -1154,7 +1162,6 @@
         createSheetMusic();
         createPiano();
         updateTimeDisplay();
-        document.getElementById('pauseBtn').disabled = true;
         document.getElementById('stopBtn').disabled = true;
 
         // Add measure markers
